@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
 import gameImage from '../assets/game/game-image.png';
-import brunoImage from '../assets/game/Bruno.png';
+import brunoImage from '../assets/game/bruno.png';
 
 function GamePage() {
   // État pour stocker les coordonnées du dernier clic
