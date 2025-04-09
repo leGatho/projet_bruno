@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { TransformWrapper, TransformComponent } from 'react-zoom-pan-pinch';
-import gameImage from '../assets/game/game-image.jpg';
+import gameImage from '../assets/game/game-image.png';
+import brunoImage from '../assets/game/Bruno.png';
 
 function GamePage() {
   // État pour stocker les coordonnées du dernier clic
@@ -15,21 +16,22 @@ function GamePage() {
   const imageContainerRef = useRef(null);
   // Référence à l'image principale
   const mainImageRef = useRef(null);
+  // Référence à l'image de Bruno
+  const brunoImageRef = useRef(null);
+
+  // Dimensions fixes de Bruno en pixels
+  const brunoSize = { width: 28, height: 42 };
 
   // Fonction pour générer une nouvelle position aléatoire pour la zone cachée
   const generateRandomHiddenZone = () => {
-    // Taille de la zone (5% de l'image)
-    const zoneSize = 5;
-    
-    // Génère une position aléatoire (en laissant une marge de 5% sur les bords)
-    const xMin = Math.random() * (95 - zoneSize);
-    const yMin = Math.random() * (95 - zoneSize);
+    // Génère une position aléatoire (en laissant une marge sur les bords)
+    // On utilise 95% comme limite pour éviter que Bruno ne sorte de l'écran
+    const xMin = Math.random() * 90; // Réduit à 90% pour éviter les bords
+    const yMin = Math.random() * 90;
     
     return {
       xMin,
-      xMax: xMin + zoneSize,
-      yMin,
-      yMax: yMin + zoneSize
+      yMin
     };
   };
 
@@ -38,15 +40,34 @@ function GamePage() {
     setHiddenZone(generateRandomHiddenZone());
   }, []);
 
-  // Fonction qui vérifie si le clic est dans la zone cachée
-  const isInHiddenZone = (x, y) => {
-    if (!hiddenZone) return false;
+  // Fonction qui vérifie si le clic est sur Bruno
+  const isClickOnBruno = (x, y) => {
+    if (!hiddenZone || !brunoImageRef.current) return false;
     
+    // Récupérer les dimensions réelles de l'image principale
+    const mainImage = mainImageRef.current;
+    if (!mainImage) return false;
+    
+    const mainImageRect = mainImage.getBoundingClientRect();
+    const mainImageWidth = mainImageRect.width;
+    const mainImageHeight = mainImageRect.height;
+    
+    // Calculer les coordonnées réelles de Bruno en pixels
+    const brunoLeftPx = (hiddenZone.xMin / 100) * mainImageWidth;
+    const brunoTopPx = (hiddenZone.yMin / 100) * mainImageHeight;
+    const brunoRightPx = brunoLeftPx + brunoSize.width;
+    const brunoBottomPx = brunoTopPx + brunoSize.height;
+    
+    // Convertir les coordonnées du clic de pourcentage à pixels
+    const clickXPx = (x / 100) * mainImageWidth;
+    const clickYPx = (y / 100) * mainImageHeight;
+    
+    // Vérifier si le clic est dans les limites de Bruno
     return (
-      x >= hiddenZone.xMin && 
-      x <= hiddenZone.xMax && 
-      y >= hiddenZone.yMin && 
-      y <= hiddenZone.yMax
+      clickXPx >= brunoLeftPx && 
+      clickXPx <= brunoRightPx && 
+      clickYPx >= brunoTopPx && 
+      clickYPx <= brunoBottomPx
     );
   };
 
@@ -57,30 +78,30 @@ function GamePage() {
     const image = mainImageRef.current;
     if (!container || !image) return;
     
-    // Récupérer les dimensions de l'image affichée (qui peuvent être différentes de la taille naturelle)
+    // Récupérer les dimensions de l'image affichée
     const imgRect = image.getBoundingClientRect();
     
     // Récupérer les coordonnées relatives à l'image réelle, pas au conteneur
     const x = event.clientX - imgRect.left;
     const y = event.clientY - imgRect.top;
     
-    // Calculer les pourcentages par rapport à l'image visible, pas au conteneur
+    // Calculer les pourcentages par rapport à l'image visible
     const xPercent = (x / imgRect.width) * 100;
     const yPercent = (y / imgRect.height) * 100;
     
     // Mettre à jour l'état avec les nouvelles coordonnées
     setClickCoordinates({ x: xPercent, y: yPercent });
     
-    // Afficher les coordonnées dans la console comme demandé
+    // Afficher les coordonnées dans la console
     console.log(`Clic aux coordonnées: x=${xPercent.toFixed(2)}%, y=${yPercent.toFixed(2)}%`);
     
-    // Vérifier si le clic est dans la zone cachée
-    if (isInHiddenZone(xPercent, yPercent)) {
+    // Vérifier si le clic est sur Bruno
+    if (isClickOnBruno(xPercent, yPercent)) {
       setCharacterFound(true);
     }
   };
 
-  // Fonction pour basculer l'affichage de la zone cachée
+  // Fonction pour basculer l'affichage des bordures de la zone cachée
   const toggleHiddenZone = () => {
     setShowHiddenZone(!showHiddenZone);
   };
@@ -95,12 +116,12 @@ function GamePage() {
     <div className="game-page">
       <h1 className="text-2xl font-bold mb-4">Trouve Bruno caché dans l'image</h1>
       
-      {/* Bouton temporaire pour afficher/masquer la zone cachée */}
+      {/* Bouton temporaire pour afficher/masquer les bordures */}
       <button 
         onClick={toggleHiddenZone}
         className="mb-4 px-4 py-2 bg-gray-200 hover:bg-gray-300 rounded text-gray-800 transition-colors"
       >
-        {showHiddenZone ? "Masquer la zone" : "Afficher la zone"}
+        {showHiddenZone ? "Masquer les bordures" : "Afficher les bordures"}
       </button>
       
       {/* Wrapper pour permettre le zoom et le déplacement */}
@@ -163,22 +184,31 @@ function GamePage() {
               }}
             />
             
-            {/* Zone bleue de Bruno - sans le SVG */}
+            {/* Image de Bruno - toujours visible */}
             {hiddenZone && (
               <div 
-                className={`absolute ${showHiddenZone ? 'border-4 border-red-500' : ''}`}
+                className={`absolute ${showHiddenZone ? 'border-2 border-red-500' : ''}`}
                 style={{
                   position: 'absolute',
                   left: `${hiddenZone.xMin}%`,
                   top: `${hiddenZone.yMin}%`,
-                  width: `${hiddenZone.xMax - hiddenZone.xMin}%`,
-                  height: `${hiddenZone.yMax - hiddenZone.yMin}%`,
-                  backgroundColor: 'rgba(0, 0, 255, 0.5)',
-                  pointerEvents: 'none',
-                  zIndex: 100,
-                  transform: 'translateZ(0)'
+                  width: `${brunoSize.width}px`,
+                  height: `${brunoSize.height}px`,
+                  zIndex: 50
                 }}
-              />
+              >
+                <img 
+                  ref={brunoImageRef}
+                  src={brunoImage} 
+                  alt="Bruno"
+                  className="w-full h-full"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: 'contain'
+                  }}
+                />
+              </div>
             )}
           </div>
         </TransformComponent>
@@ -202,8 +232,7 @@ function GamePage() {
         <p>Dernier clic: x={clickCoordinates.x.toFixed(2)}%, y={clickCoordinates.y.toFixed(2)}%</p>
         {showHiddenZone && hiddenZone && (
           <p className="text-red-500 mt-1">
-            Position de la zone: x={hiddenZone.xMin.toFixed(2)}% à {hiddenZone.xMax.toFixed(2)}%, 
-            y={hiddenZone.yMin.toFixed(2)}% à {hiddenZone.yMax.toFixed(2)}%
+            Position de Bruno: x={hiddenZone.xMin.toFixed(2)}%, y={hiddenZone.yMin.toFixed(2)}%
           </p>
         )}
       </div>

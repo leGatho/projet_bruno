@@ -23,11 +23,13 @@
 
 .nav-links {
   display: flex;
-  gap: 2rem;
-  justify-content: center;
+  gap: 1rem;
+  justify-content: flex-start;
+  align-items: center;
   list-style: none;
   margin: 0;
   padding: 0;
+  width: 100%;
 }
 
 .nav-links a {
@@ -41,6 +43,19 @@
 
 .nav-links a:hover {
   background-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-links .ml-auto {
+  margin-left: auto;
+}
+
+/* Bouton de déconnexion */
+.nav-links button {
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 0.25rem;
+  transition: background-color 0.3s;
 }
 
 /* Page d'accueil (styles conservés de l'app originale) */
@@ -102,4 +117,60 @@
 .coordinates-display {
   font-family: monospace;
   margin-top: 1rem;
+}
+
+/* Pages d'authentification */
+.auth-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+  padding: 1rem;
+}
+
+.auth-form {
+  width: 100%;
+  max-width: 400px;
+  padding: 2rem;
+  background-color: white;
+  border-radius: 0.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 0.25rem;
+}
+
+.auth-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #3b82f6;
+  color: white;
+  border: none;
+  border-radius: 0.25rem;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.auth-button:hover {
+  background-color: #2563eb;
+}
+
+.auth-button:disabled {
+  background-color: #93c5fd;
+  cursor: not-allowed;
 }
